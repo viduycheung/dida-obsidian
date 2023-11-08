@@ -1,0 +1,11 @@
+{
+	"id": "dida",
+	"name": "DIDA",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Check and create tasks in DIDA via Obsidian",
+	"author": "Viduy Cheung",
+	"authorUrl": "https://dida365.com",
+	"fundingUrl": "https://dida365.com/about/upgrade",
+	"isDesktopOnly": false
+}
