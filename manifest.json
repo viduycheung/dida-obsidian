@@ -1,6 +1,6 @@
 {
 	"id": "dida",
-	"name": "DIDA",
+	"name": "DIDA(滴答清单)",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Check and create tasks in DIDA via Obsidian",
