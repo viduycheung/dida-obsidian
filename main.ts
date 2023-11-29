@@ -224,6 +224,7 @@ export default class TickTickPlugin extends Plugin {
 					break;
 				}
 				default:
+					console.error(e);
 					throw new Error(e);
 			}
 		});
@@ -249,6 +250,7 @@ export default class TickTickPlugin extends Plugin {
 					break;
 				}
 				default:
+					console.error(e);
 					throw new Error(e);
 			}
 		});
