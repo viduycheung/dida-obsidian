@@ -4,6 +4,15 @@ DIDA is a powerful to-do & task management app with seamless cloud synchronizati
 
 This plugin integrates with [DIDA](https://dida365.com), allowing you to easily transform and sync data between DIDA and Obsidian.
 
+## Build
+cd dida-obsidian
+npm install
+npm run dev
+
+## Manually install
+copy `main.js`, `manifest.json`, `styles.css` to your .obsidian/plugins
+
+
 ## Usage
 
 To use the plugin, you should first log into DIDA via the plugin settings. Once that’s done, you can access the commands as needed.
