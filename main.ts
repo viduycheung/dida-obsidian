@@ -379,7 +379,7 @@ class SettingTab extends PluginSettingTab {
 
 		const url = `https://${domain}/oauth/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(
 			callbackUrl
-		)}&response_type=code&scope=tasks:read&scope=tasks:write`;
+		)}&response_type=code&scope=tasks:read tasks:write`;
 
 		const tokenDesc = document.createDocumentFragment();
 		tokenDesc.textContent = `This Plugin need your ${productName} token to fetch the API, you can the token `;
