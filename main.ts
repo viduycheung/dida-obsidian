@@ -36,6 +36,9 @@ type Task = {
 	content: string;
 	priority: number;
 	//  0 | 1 | 3 | 5
+	isAllDay: boolean;
+	startDate: string;
+	dueDate: string;
 	projectId: string;
 	status: number;
 	sortOrder: number;
@@ -281,17 +284,23 @@ class CreateTaskModal extends Modal {
 		content: Task["content"];
 		priority: Task["priority"];
 		projectId: Task["projectId"];
+		isAllDay: Task["isAllDay"];
+		startDate: Task["startDate"];
+		dueDate: Task["dueDate"];
 	};
 
 	constructor(app: App, plugin: TickTickPlugin, taskData: Partial<Task>) {
 		super(app);
 		this.plugin = plugin;
-		const { title, content, priority, projectId } = taskData;
+		const { title, content, priority, projectId, isAllDay, startDate, dueDate } = taskData;
 		this.taskData = {
 			title: title || "",
 			content: content || "",
 			priority: priority == null ? 0 : priority,
 			projectId: projectId || "inbox",
+			isAllDay: true,
+			startDate: startDate || "Inbox",
+			dueDate: dueDate || "",
 		};
 	}
 
@@ -342,6 +351,32 @@ class CreateTaskModal extends Modal {
 				this.taskData.projectId = value;
 			});
 		projectComp.selectEl.style.flex = "auto";
+
+		// startDateLine
+		const startDateLine = contentEl.createDiv({ cls: "modal-line" });
+		startDateLine.createEl("div", { cls: "label", text: "startDate" });
+		const startDateComp = new DropdownComponent(startDateLine)
+			.addOptions({
+				"Inbox": "None",
+				"Today": "Today",
+				"Tomorrow": "Tomorrow",
+			})
+			.setValue(this.taskData.startDate.toString())
+			.onChange((value) => {
+				if (value === 'None') {	//Inbox
+					this.taskData.startDate = ""
+				} else if (value === 'Today') {	//set startDate to now
+					const currentISODate = new Date().toISOString();
+					this.taskData.startDate = currentISODate.replace("Z", "+0000");
+				} else if (value === 'Tomorrow') {	//set startDate to tomorrow
+					const today = new Date();
+					const tomorrow = new Date(Date());
+					tomorrow.setDate(today.getDate() + 1);
+					const tomorrowISODate = tomorrow.toISOString();
+					this.taskData.startDate = tomorrowISODate.replace("Z", "+0000");
+				}
+			});
+			startDateComp.selectEl.style.flex = "auto";
 
 		// priority
 		const priorityLine = contentEl.createDiv({ cls: "modal-line" });
