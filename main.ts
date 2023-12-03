@@ -72,7 +72,7 @@ const DEFAULT_SETTINGS: TickTickPluginSettings = {
 
 export default class TickTickPlugin extends Plugin {
 	settings: TickTickPluginSettings;
-
+	private taskMap = new Map<string, { id: string, projectId: string }>();
 	async onload() {
 		await this.loadSettings();
 
@@ -112,6 +112,34 @@ export default class TickTickPlugin extends Plugin {
 				}
 			},
 		});
+
+
+		this.addCommand({
+			id: "complete-task",
+			name: "Complete task",
+			callback: async () => {
+				if (this.checkUserLoginStatus()) {
+					const activeFile =
+						this.app.workspace.activeEditor?.file;
+					const sel =
+						this.app.workspace.activeEditor?.editor?.getSelection();
+					if (activeFile) {
+						const title = `[${
+							sel || activeFile.name
+						}](${this.getFileLink(activeFile)})`;
+						const taskInfo = this.taskMap.get(title);
+						if(taskInfo) {
+							const { id, projectId } = taskInfo;
+							this.completeTask(id, projectId);
+							this.taskMap.delete(title);
+						} else {
+							new Notice("Not a valid task: task dont exist");
+						}
+					}
+				}
+			},
+		});
+
 
 		this.addSettingTab(new SettingTab(this.app, this));
 
@@ -198,6 +226,11 @@ export default class TickTickPlugin extends Plugin {
 		try {
 			const data = await this.requestPOST("/open/v1/task", taskData);
 			if (data) {
+				const responseData = JSON.parse(data.text);
+				const { id, projectId, title } = responseData;
+				this.taskMap.set(title, { id, projectId });
+				console.log("Task ID:", id);
+				console.log("Project ID:", projectId);
 				new Notice(`Add ${taskData.title}`);
 			}
 		} catch (error) {
@@ -205,6 +238,20 @@ export default class TickTickPlugin extends Plugin {
 			return new Promise((resolve, reject) => reject(error));
 		}
 	};
+
+
+	completeTask = async (id: string, projectId: string) => {
+		try {
+			const data = await this.requestPOST(`/open/v1/project/${projectId}/task/${id}/complete`, {});
+			if (data) {
+				new Notice("complete done");
+			}
+		} catch (error) {
+			new Notice("complete Failed");
+			return new Promise((resolve, reject) => reject(error));
+		}
+	};
+
 
 	async loadSettings() {
 		this.settings = Object.assign(
