@@ -346,7 +346,7 @@ class CreateTaskModal extends Modal {
 			priority: priority == null ? 0 : priority,
 			projectId: projectId || "inbox",
 			isAllDay: true,
-			startDate: startDate || "Inbox",
+			startDate: startDate || "Today",
 			dueDate: dueDate || "",
 		};
 	}
