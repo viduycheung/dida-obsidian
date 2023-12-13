@@ -409,7 +409,7 @@ class CreateTaskModal extends Modal {
 				"Tomorrow": "Tomorrow",
 			})
 			.setValue(this.taskData.startDate.toString())
-			.onChange((value) => {
+			.onChange((value) => {	// this logic will only be triggered when DropdownComponent change
 				if (value === 'None') {	//Inbox
 					this.taskData.startDate = ""
 				} else if (value === 'Today') {	//set startDate to now
@@ -422,7 +422,7 @@ class CreateTaskModal extends Modal {
 					const tomorrowISODate = tomorrow.toISOString();
 					this.taskData.startDate = tomorrowISODate.replace("Z", "+0000");
 				}
-			});
+			});	// as a result, if I dont change the DropdownComponent, we wont run the default logic
 			startDateComp.selectEl.style.flex = "auto";
 
 		// priority
