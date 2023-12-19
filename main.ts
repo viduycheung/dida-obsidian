@@ -399,6 +399,21 @@ class CreateTaskModal extends Modal {
 			});
 		projectComp.selectEl.style.flex = "auto";
 
+		const handleStartDateChange = (value: string) => {
+			if (value === 'None') {	//Inbox
+				this.taskData.startDate = "";
+			} else if (value === 'Today') {	//set startDate to now
+				const currentISODate = new Date().toISOString();
+				this.taskData.startDate = currentISODate.replace("Z", "+0000");
+			} else if (value === 'Tomorrow') {	//set startDate to tomorrow
+				const today = new Date();
+				const tomorrow = new Date(Date());
+				tomorrow.setDate(today.getDate() + 1);
+				const tomorrowISODate = tomorrow.toISOString();
+				this.taskData.startDate = tomorrowISODate.replace("Z", "+0000");
+			}
+		};
+
 		// startDateLine
 		const startDateLine = contentEl.createDiv({ cls: "modal-line" });
 		startDateLine.createEl("div", { cls: "label", text: "startDate" });
@@ -409,21 +424,11 @@ class CreateTaskModal extends Modal {
 				"Tomorrow": "Tomorrow",
 			})
 			.setValue(this.taskData.startDate.toString())
-			.onChange((value) => {	// this logic will only be triggered when DropdownComponent change
-				if (value === 'None') {	//Inbox
-					this.taskData.startDate = ""
-				} else if (value === 'Today') {	//set startDate to now
-					const currentISODate = new Date().toISOString();
-					this.taskData.startDate = currentISODate.replace("Z", "+0000");
-				} else if (value === 'Tomorrow') {	//set startDate to tomorrow
-					const today = new Date();
-					const tomorrow = new Date(Date());
-					tomorrow.setDate(today.getDate() + 1);
-					const tomorrowISODate = tomorrow.toISOString();
-					this.taskData.startDate = tomorrowISODate.replace("Z", "+0000");
-				}
-			});	// as a result, if I dont change the DropdownComponent, we wont run the default logic
+			.onChange((value) => {
+				handleStartDateChange(value);
+			});
 			startDateComp.selectEl.style.flex = "auto";
+			handleStartDateChange(startDateComp.getValue());	// manually trigger it at first
 
 		// priority
 		const priorityLine = contentEl.createDiv({ cls: "modal-line" });
