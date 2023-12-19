@@ -36,6 +36,9 @@ type Task = {
 	content: string;
 	priority: number;
 	//  0 | 1 | 3 | 5
+	isAllDay: boolean;
+	startDate: string;
+	dueDate: string;
 	projectId: string;
 	status: number;
 	sortOrder: number;
@@ -69,7 +72,7 @@ const DEFAULT_SETTINGS: TickTickPluginSettings = {
 
 export default class TickTickPlugin extends Plugin {
 	settings: TickTickPluginSettings;
-
+	private taskMap = new Map<string, { id: string, projectId: string }>();
 	async onload() {
 		await this.loadSettings();
 
@@ -109,6 +112,34 @@ export default class TickTickPlugin extends Plugin {
 				}
 			},
 		});
+
+
+		this.addCommand({
+			id: "complete-task",
+			name: "Complete task",
+			callback: async () => {
+				if (this.checkUserLoginStatus()) {
+					const activeFile =
+						this.app.workspace.activeEditor?.file;
+					const sel =
+						this.app.workspace.activeEditor?.editor?.getSelection();
+					if (activeFile) {
+						const title = `[${
+							sel || activeFile.name
+						}](${this.getFileLink(activeFile)})`;
+						const taskInfo = this.taskMap.get(title);
+						if(taskInfo) {
+							const { id, projectId } = taskInfo;
+							this.completeTask(id, projectId);
+							this.taskMap.delete(title);
+						} else {
+							new Notice("Not a valid task: task dont exist");
+						}
+					}
+				}
+			},
+		});
+
 
 		this.addSettingTab(new SettingTab(this.app, this));
 
@@ -195,6 +226,11 @@ export default class TickTickPlugin extends Plugin {
 		try {
 			const data = await this.requestPOST("/open/v1/task", taskData);
 			if (data) {
+				const responseData = JSON.parse(data.text);
+				const { id, projectId, title } = responseData;
+				this.taskMap.set(title, { id, projectId });
+				console.log("Task ID:", id);
+				console.log("Project ID:", projectId);
 				new Notice(`Add ${taskData.title}`);
 			}
 		} catch (error) {
@@ -202,6 +238,20 @@ export default class TickTickPlugin extends Plugin {
 			return new Promise((resolve, reject) => reject(error));
 		}
 	};
+
+
+	completeTask = async (id: string, projectId: string) => {
+		try {
+			const data = await this.requestPOST(`/open/v1/project/${projectId}/task/${id}/complete`, {});
+			if (data) {
+				new Notice("complete done");
+			}
+		} catch (error) {
+			new Notice("complete Failed");
+			return new Promise((resolve, reject) => reject(error));
+		}
+	};
+
 
 	async loadSettings() {
 		this.settings = Object.assign(
@@ -281,17 +331,23 @@ class CreateTaskModal extends Modal {
 		content: Task["content"];
 		priority: Task["priority"];
 		projectId: Task["projectId"];
+		isAllDay: Task["isAllDay"];
+		startDate: Task["startDate"];
+		dueDate: Task["dueDate"];
 	};
 
 	constructor(app: App, plugin: TickTickPlugin, taskData: Partial<Task>) {
 		super(app);
 		this.plugin = plugin;
-		const { title, content, priority, projectId } = taskData;
+		const { title, content, priority, projectId, isAllDay, startDate, dueDate } = taskData;
 		this.taskData = {
 			title: title || "",
 			content: content || "",
 			priority: priority == null ? 0 : priority,
 			projectId: projectId || "inbox",
+			isAllDay: true,
+			startDate: startDate || "Today",
+			dueDate: dueDate || "",
 		};
 	}
 
@@ -342,6 +398,37 @@ class CreateTaskModal extends Modal {
 				this.taskData.projectId = value;
 			});
 		projectComp.selectEl.style.flex = "auto";
+
+		const handleStartDateChange = (value: string) => {
+			if (value === 'None') {	//Inbox
+				this.taskData.startDate = "";
+			} else if (value === 'Today') {	//set startDate to now
+				const currentISODate = new Date().toISOString();
+				this.taskData.startDate = currentISODate.replace("Z", "+0000");
+			} else if (value === 'Tomorrow') {	//set startDate to tomorrow
+				const today = new Date();
+				const tomorrow = new Date(Date());
+				tomorrow.setDate(today.getDate() + 1);
+				const tomorrowISODate = tomorrow.toISOString();
+				this.taskData.startDate = tomorrowISODate.replace("Z", "+0000");
+			}
+		};
+
+		// startDateLine
+		const startDateLine = contentEl.createDiv({ cls: "modal-line" });
+		startDateLine.createEl("div", { cls: "label", text: "startDate" });
+		const startDateComp = new DropdownComponent(startDateLine)
+			.addOptions({
+				"Inbox": "None",
+				"Today": "Today",
+				"Tomorrow": "Tomorrow",
+			})
+			.setValue(this.taskData.startDate.toString())
+			.onChange((value) => {
+				handleStartDateChange(value);
+			});
+			startDateComp.selectEl.style.flex = "auto";
+			handleStartDateChange(startDateComp.getValue());	// manually trigger it at first
 
 		// priority
 		const priorityLine = contentEl.createDiv({ cls: "modal-line" });
